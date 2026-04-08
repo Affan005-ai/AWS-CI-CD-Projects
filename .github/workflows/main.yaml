@@ -27,6 +27,7 @@ jobs:
 
   build-and-push-ecr-image:
     name: Continuous Delivery
+    if: ${{ vars.ENABLE_AWS_DEPLOY == 'true' }}
     needs: integration
     runs-on: ubuntu-latest
     steps:
@@ -49,7 +50,6 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build, tag, and push image to Amazon ECR
-        id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
@@ -60,9 +60,9 @@ jobs:
           # be deployed to ECS.
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
   Continuous-Deployment:
+    if: ${{ vars.ENABLE_AWS_DEPLOY == 'true' }}
     needs: build-and-push-ecr-image
     runs-on: self-hosted
     steps:
